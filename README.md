@@ -1,2 +1,4 @@
 # Flat_Track_Jam_Timer
-Jam Timer app for WFTDA Flat Track Derby
+React Native Jam Timer app for WFTDA Flat Track Derby
+
+Currently in development - does not have functionality.
