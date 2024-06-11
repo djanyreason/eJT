@@ -2,20 +2,20 @@ import { useState, useEffect, useRef } from 'react';
 
 export const useTimer = (limit = 0) => {
   const [time, setTime] = useState(0);
-  const [maxTime, setMaxTime] = useState(limit >= 0 ? limit : 0);
+  const [maxTime, setMaxTime] = useState(limit);
   const [startTime, setStartTime] = useState(0);
-  const [paused, setPaused] = useState(true);
   const [pauseTime, setPauseTime] = useState(0);
+  const [status, setStatus] = useState('Paused');
 
   const interval = useRef(0);
 
   useEffect(() => {
-    if (startTime > 0 && !paused) {
+    if (startTime > 0 && status === 'Running') {
       interval.current = setInterval(() => {
         const newTime = Date.now() - startTime + pauseTime;
-        if (newTime > maxTime) {
+        if (maxTime > 0 && newTime > maxTime) {
           setTime(maxTime);
-          setPaused(true);
+          setStatus('Limit');
           setStartTime(0);
         } else {
           setTime(Date.now() - startTime + pauseTime);
@@ -27,18 +27,18 @@ export const useTimer = (limit = 0) => {
         interval.current = undefined;
       }
     }
-  }, [startTime, pauseTime, paused, maxTime]);
+  }, [startTime, pauseTime, status, maxTime]);
 
   const startTimer = () => {
-    if (time < maxTime) {
+    if (maxTime <= 0 || time < maxTime) {
       setPauseTime(time);
-      setPaused(false);
+      setStatus('Running');
       setStartTime(Date.now());
     }
   };
 
   const pauseTimer = () => {
-    setPaused(true);
+    setStatus('Paused');
     setStartTime(0);
     setPauseTime(time);
   };
@@ -47,14 +47,13 @@ export const useTimer = (limit = 0) => {
     setTime(0);
     setMaxTime(newLimit > 0 ? newLimit : maxTime);
     setStartTime(0);
-    setPaused(true);
+    setStatus('Paused');
     setPauseTime(0);
   };
 
   return {
     time,
-    paused,
-    complete: time === maxTime,
+    status,
     startTimer,
     pauseTimer,
     setTime,
