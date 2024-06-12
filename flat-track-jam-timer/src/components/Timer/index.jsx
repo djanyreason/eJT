@@ -5,11 +5,16 @@ import {
   useWindowDimensions,
   Pressable,
 } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
 
 import theme from '../../theme';
 
 import { useTimer } from '../../hooks/useTimer';
 import { formatTime } from '../../util';
+
+const periodTime = [30, 0];
+const jamTime = [2, 0];
+const lineupTime = [0, 30];
 
 const styles = StyleSheet.create({
   container: {
@@ -50,39 +55,99 @@ const Timer = () => {
     width: limiter === 'width' ? modWidth : (modHeight * 4.5) / 2,
   };
 
-  const aTimer = useTimer(1000);
+  const periodTimeMS = (periodTime[0] * 60 + periodTime[1]) * 1000;
+  const jamTimeMS = (jamTime[0] * 60 + jamTime[1]) * 1000;
+  const lineupTimeMS = (lineupTime[0] * 60 + lineupTime[1]) * 1000;
+  const periodTimer = useTimer(periodTimeMS);
+  const jamTimer = useTimer(jamTimeMS);
+  const lineupTimer = useTimer(lineupTimeMS);
+  const timeoutTimer = useTimer();
+
+  const [buttonLabel, setButtonLabel] = useState('Start Jam');
+
+  const endTimeout = () => {
+    timeoutTimer.pauseTimer();
+    timeoutTimer.resetTimer();
+    periodTimer.startTimer();
+    jamTimer.startTimer();
+    setButtonLabel('End Jam');
+  };
+
+  const endJam = useCallback(() => {
+    const resetJam = jamTimer.resetTimer;
+    resetJam();
+    if (periodTimer.limit) {
+      setButtonLabel('Reset Clocks');
+    } else {
+      const startLineup = lineupTimer.startTimer;
+      startLineup();
+      setButtonLabel('Timeout');
+    }
+  }, [jamTimer.resetTimer, periodTimer.limit, lineupTimer.startTimer]);
+
+  const callTimeout = () => {
+    lineupTimer.resetTimer();
+    periodTimer.pauseTimer();
+    timeoutTimer.startTimer();
+    setButtonLabel('Start Jam');
+  };
+
+  const resetAll = () => {
+    periodTimer.resetTimer();
+    jamTimer.resetTimer();
+    lineupTimer.resetTimer();
+    timeoutTimer.resetTimer();
+  };
+
+  useEffect(() => {
+    const resetLineup = lineupTimer.resetTimer;
+    const startJam = jamTimer.startTimer;
+    if (lineupTimer.limit) {
+      resetLineup();
+      startJam();
+      setButtonLabel('End Jam');
+    } else if (jamTimer.limit) endJam();
+  }, [
+    lineupTimer.limit,
+    jamTimer.limit,
+    lineupTimer.resetTimer,
+    jamTimer.startTimer,
+    endJam,
+  ]);
 
   return (
     <View style={styles.container}>
       <View style={dimensionBoxStyle}>
-        <Text style={styles.textStyle}>{formatTime(aTimer.time)}</Text>
+        <Text style={styles.textStyle}>
+          {formatTime(periodTimeMS - periodTimer.time)}
+        </Text>
+      </View>
+      <View style={dimensionBoxStyle}>
+        <Text style={styles.textStyle}>
+          {lineupTimer.running
+            ? formatTime(lineupTimer.time)
+            : timeoutTimer.running
+            ? formatTime(timeoutTimer.time)
+            : formatTime(jamTimeMS - jamTimer.time)}
+        </Text>
       </View>
       <View style={dimensionBoxStyle}>
         <Pressable
           onPress={
-            aTimer.complete
-              ? () => {
-                  aTimer.resetTimer(100000);
-                }
-              : aTimer.paused
-              ? aTimer.startTimer
-              : aTimer.pauseTimer
+            lineupTimer.running
+              ? callTimeout
+              : jamTimer.running
+              ? endJam
+              : endTimeout
           }
         >
-          <Text style={styles.textStyle}>
-            {aTimer.complete
-              ? 'Reset Timer'
-              : aTimer.paused
-              ? 'Start Timer'
-              : 'PauseTimer'}
-          </Text>
+          <Text style={styles.textStyle}>{buttonLabel}</Text>
         </Pressable>
       </View>
       <View style={dimensionBoxStyle}>
-        <Text style={styles.textStyle}>Timer 2</Text>
-      </View>
-      <View style={dimensionBoxStyle}>
-        <Text style={styles.textStyle}>Button 2</Text>
+        <Pressable onPress={resetAll}>
+          <Text style={styles.textStyle}>Reset</Text>
+        </Pressable>
       </View>
     </View>
   );

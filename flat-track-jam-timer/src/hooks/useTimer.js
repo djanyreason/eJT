@@ -1,21 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
-export const useTimer = (limit = 0) => {
+export const useTimer = (timeLimit = 0) => {
   const [time, setTime] = useState(0);
-  const [maxTime, setMaxTime] = useState(limit);
+  const [maxTime, setMaxTime] = useState(timeLimit);
   const [startTime, setStartTime] = useState(0);
   const [pauseTime, setPauseTime] = useState(0);
-  const [status, setStatus] = useState('Paused');
+  const [paused, setPaused] = useState(true);
+  const [limit, setLimit] = useState(false);
 
   const interval = useRef(0);
 
   useEffect(() => {
-    if (startTime > 0 && status === 'Running') {
+    if (startTime > 0 && !paused && !limit) {
       interval.current = setInterval(() => {
         const newTime = Date.now() - startTime + pauseTime;
         if (maxTime > 0 && newTime > maxTime) {
           setTime(maxTime);
-          setStatus('Limit');
+          setLimit(true);
+          setPaused(true);
           setStartTime(0);
         } else {
           setTime(Date.now() - startTime + pauseTime);
@@ -27,36 +29,46 @@ export const useTimer = (limit = 0) => {
         interval.current = undefined;
       }
     }
-  }, [startTime, pauseTime, status, maxTime]);
+  }, [startTime, pauseTime, maxTime, paused, limit]);
 
-  const startTimer = () => {
-    if (maxTime <= 0 || time < maxTime) {
-      setPauseTime(time);
-      setStatus('Running');
+  const startTimer = useCallback(() => {
+    if (maxTime <= 0 || !limit) {
+      setPaused(false);
       setStartTime(Date.now());
+    }
+  }, [maxTime, limit]);
+
+  const pauseTimer = () => {
+    setPaused(true);
+    setStartTime(0);
+    if (!limit && maxTime > time) {
+      setPauseTime(time);
+    } else {
+      setTime(maxTime);
+      setLimit(true);
     }
   };
 
-  const pauseTimer = () => {
-    setStatus('Paused');
-    setStartTime(0);
-    setPauseTime(time);
-  };
-
-  const resetTimer = (newLimit = 0) => {
-    setTime(0);
-    setMaxTime(newLimit > 0 ? newLimit : maxTime);
-    setStartTime(0);
-    setStatus('Paused');
-    setPauseTime(0);
-  };
+  const resetTimer = useCallback(
+    (newLimit = 0) => {
+      setTime(0);
+      setMaxTime(newLimit > 0 ? newLimit : maxTime);
+      setStartTime(0);
+      setPaused(true);
+      setLimit(false);
+      setPauseTime(0);
+    },
+    [maxTime]
+  );
 
   return {
     time,
-    status,
+    running: !paused,
+    limit: limit,
     startTimer,
     pauseTimer,
     setTime,
     resetTimer,
+    maxTime,
   };
 };
