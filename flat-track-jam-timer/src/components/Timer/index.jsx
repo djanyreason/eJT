@@ -7,6 +7,8 @@ import {
 } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 
+import Display from './Display';
+
 import theme from '../../theme';
 
 import { useTimer } from '../../hooks/useTimer';
@@ -15,6 +17,8 @@ import { formatTime } from '../../util';
 const periodTime = [30, 0];
 const jamTime = [2, 0];
 const lineupTime = [0, 30];
+
+//const msTime = (time) => 1000 * (time[0] * 60 + time[1]);
 
 const styles = StyleSheet.create({
   container: {
@@ -40,6 +44,11 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
 });
+/*
+const GameStateEnum = Object.freeze({
+  COMING_UP: 0,
+  TO_FIVE_SECONDS: 1,
+});*/
 
 const Timer = () => {
   const { height, width } = useWindowDimensions();
@@ -55,12 +64,60 @@ const Timer = () => {
     width: limiter === 'width' ? modWidth : (modHeight * 4.5) / 2,
   };
 
+  /*
+  const [status, setStatus] = useState(GameStateEnum.COMING_UP);
+  const [buttonLabel, setButtonLabel] = useState('Five Seconds');
+
+  const periodTimer = useTimer(msTime(periodTime), setStatus(GameStateEnum.TO_FIVE_SECONDS));
+  const secondTimer
+  
+
+  return (
+    <View style={styles.container}>
+      <View style={dimensionBoxStyle}>
+        <Text style={styles.textStyle}>
+          {formatTime(periodTimeMS - periodTimer.time)}
+        </Text>
+      </View>
+      <View style={dimensionBoxStyle}>
+        <Text style={styles.textStyle}>
+          {lineupTimer.running
+            ? formatTime(lineupTimer.time)
+            : timeoutTimer.running
+            ? formatTime(timeoutTimer.time)
+            : formatTime(jamTimeMS - jamTimer.time)}
+        </Text>
+      </View>
+      <View style={dimensionBoxStyle}>
+        <Pressable
+          onPress={
+            lineupTimer.running
+              ? callTimeout
+              : jamTimer.running
+              ? endJam
+              : endTimeout
+          }
+        >
+          <Text style={styles.textStyle}>{buttonLabel}</Text>
+        </Pressable>
+      </View>
+      <View style={dimensionBoxStyle}>
+        <Pressable onPress={resetAll}>
+          <Text style={styles.textStyle}>Reset</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+  */
   const periodTimeMS = (periodTime[0] * 60 + periodTime[1]) * 1000;
   const jamTimeMS = (jamTime[0] * 60 + jamTime[1]) * 1000;
   const lineupTimeMS = (lineupTime[0] * 60 + lineupTime[1]) * 1000;
+  const lineupFunc = () => {
+    console.log('Hello');
+  };
   const periodTimer = useTimer(periodTimeMS);
   const jamTimer = useTimer(jamTimeMS);
-  const lineupTimer = useTimer(lineupTimeMS);
+  const lineupTimer = useTimer(lineupTimeMS, lineupFunc);
   const timeoutTimer = useTimer();
 
   const [buttonLabel, setButtonLabel] = useState('Start Jam');
@@ -118,18 +175,26 @@ const Timer = () => {
   return (
     <View style={styles.container}>
       <View style={dimensionBoxStyle}>
-        <Text style={styles.textStyle}>
-          {formatTime(periodTimeMS - periodTimer.time)}
-        </Text>
+        <Display
+          style={styles.textStyle}
+          limit={periodTimeMS}
+          time={periodTimer.time}
+          countdown={true}
+        />
       </View>
       <View style={dimensionBoxStyle}>
-        <Text style={styles.textStyle}>
-          {lineupTimer.running
-            ? formatTime(lineupTimer.time)
-            : timeoutTimer.running
-            ? formatTime(timeoutTimer.time)
-            : formatTime(jamTimeMS - jamTimer.time)}
-        </Text>
+        <Display
+          style={styles.textStyle}
+          limit={jamTimeMS}
+          time={
+            lineupTimer.running
+              ? lineupTimer.time
+              : timeoutTimer.running
+              ? timeoutTimer.time
+              : jamTimer.time
+          }
+          countdown={!lineupTimer.running && !timeoutTimer.running}
+        />
       </View>
       <View style={dimensionBoxStyle}>
         <Pressable
