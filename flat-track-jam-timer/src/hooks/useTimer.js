@@ -39,22 +39,23 @@ export const useTimer = (timeLimit = 0, limFunc = null) => {
   }, [limit, limitCall]);
 
   const startTimer = useCallback(() => {
-    if (maxTime <= 0 || !limit) {
+    if (paused && (maxTime <= 0 || !limit)) {
       setPaused(false);
       setStartTime(Date.now());
     }
-  }, [maxTime, limit]);
+  }, [maxTime, limit, paused]);
 
-  const pauseTimer = () => {
+  const pauseTimer = useCallback(() => {
     setPaused(true);
     setStartTime(0);
-    if (!limit && maxTime > time) {
-      setPauseTime(time);
+    const currTime = Date.now() - startTime + pauseTime;
+    if (!limit && maxTime > currTime) {
+      setPauseTime(Date.now() - startTime + pauseTime);
     } else {
       setTime(maxTime);
       setLimit(true);
     }
-  };
+  }, [limit, maxTime, pauseTime, startTime]);
 
   const resetTimer = useCallback((newLimit = 0, newFunc = null) => {
     setTime(0);
