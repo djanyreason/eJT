@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export const useTimer = (timeLimit = 0) => {
+export const useTimer = (timeLimit = 0, limFunc = null) => {
   const [time, setTime] = useState(0);
   const [maxTime, setMaxTime] = useState(timeLimit);
   const [startTime, setStartTime] = useState(0);
   const [pauseTime, setPauseTime] = useState(0);
   const [paused, setPaused] = useState(true);
   const [limit, setLimit] = useState(false);
+  const [limitCall, setLimitCall] = useState(() => limFunc);
 
   const interval = useRef(0);
 
@@ -31,6 +32,12 @@ export const useTimer = (timeLimit = 0) => {
     }
   }, [startTime, pauseTime, maxTime, paused, limit]);
 
+  useEffect(() => {
+    if (limit && limitCall) {
+      limitCall();
+    }
+  }, [limit, limitCall]);
+
   const startTimer = useCallback(() => {
     if (maxTime <= 0 || !limit) {
       setPaused(false);
@@ -49,17 +56,15 @@ export const useTimer = (timeLimit = 0) => {
     }
   };
 
-  const resetTimer = useCallback(
-    (newLimit = 0) => {
-      setTime(0);
-      setMaxTime(newLimit > 0 ? newLimit : maxTime);
-      setStartTime(0);
-      setPaused(true);
-      setLimit(false);
-      setPauseTime(0);
-    },
-    [maxTime]
-  );
+  const resetTimer = useCallback((newLimit = 0, newFunc = null) => {
+    setTime(0);
+    if (newLimit > 0) setMaxTime(newLimit);
+    setStartTime(0);
+    setPaused(true);
+    setLimit(false);
+    if (newFunc) setLimitCall(() => newFunc);
+    setPauseTime(0);
+  }, []);
 
   return {
     time,
