@@ -8,6 +8,7 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 
 import Display from './Display';
+import ControlButton from './ControlButton';
 
 import theme from '../../theme';
 
@@ -154,6 +155,7 @@ const Timer = () => {
     jamTimer.resetTimer();
     lineupTimer.resetTimer();
     timeoutTimer.resetTimer();
+    setButtonLabel('Start Jam');
   };
 
   useEffect(() => {
@@ -197,7 +199,9 @@ const Timer = () => {
         />
       </View>
       <View style={dimensionBoxStyle}>
-        <Pressable
+        <ControlButton
+          style={styles.textStyle}
+          label={buttonLabel}
           onPress={
             lineupTimer.running
               ? callTimeout
@@ -205,14 +209,14 @@ const Timer = () => {
               ? endJam
               : endTimeout
           }
-        >
-          <Text style={styles.textStyle}>{buttonLabel}</Text>
-        </Pressable>
+        />
       </View>
       <View style={dimensionBoxStyle}>
-        <Pressable onPress={resetAll}>
-          <Text style={styles.textStyle}>Reset</Text>
-        </Pressable>
+        <ControlButton
+          style={styles.textStyle}
+          label={'Reset'}
+          onPress={resetAll}
+        />
       </View>
     </View>
   );
