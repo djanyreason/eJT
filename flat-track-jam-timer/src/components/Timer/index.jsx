@@ -1,25 +1,22 @@
-import {
-  View,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  Pressable,
-} from 'react-native';
-import { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import Display from './Display';
 import ControlButton from './ControlButton';
 
 import theme from '../../theme';
 
-import { useTimer } from '../../hooks/useTimer';
-import { formatTime } from '../../util';
+import { timerDispatch, useTimer } from '../../hooks/useTimer';
 
 const periodTime = [30, 0];
 const jamTime = [2, 0];
 const lineupTime = [0, 30];
 
-//const msTime = (time) => 1000 * (time[0] * 60 + time[1]);
+const msTime = (time) => 1000 * (time[0] * 60 + time[1]);
+
+const jamTimeMS = msTime(jamTime);
+const periodTimeMS = msTime(periodTime);
+const lineupTimeMS = msTime(lineupTime);
 
 const styles = StyleSheet.create({
   container: {
@@ -45,11 +42,14 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
 });
-/*
+
 const GameStateEnum = Object.freeze({
   COMING_UP: 0,
-  TO_FIVE_SECONDS: 1,
-});*/
+  JAM: 1,
+  LINEUP: 2,
+  TIMEOUT: 3,
+  INTERMISSION: 4,
+});
 
 const Timer = () => {
   const { height, width } = useWindowDimensions();
@@ -64,52 +64,187 @@ const Timer = () => {
     height: limiter === 'height' ? modHeight : (modWidth * 2) / 4.5,
     width: limiter === 'width' ? modWidth : (modHeight * 4.5) / 2,
   };
-
   /*
-  const [status, setStatus] = useState(GameStateEnum.COMING_UP);
-  const [buttonLabel, setButtonLabel] = useState('Five Seconds');
+  const testTimer = useTimer(30 * 1000);
+  const resetAndStart = async () => {
+    await testTimer.dispatch({ type: timerDispatch.RESET });
+    await testTimer.dispatch({ type: timerDispatch.START });
+  };
 
-  const periodTimer = useTimer(msTime(periodTime), setStatus(GameStateEnum.TO_FIVE_SECONDS));
-  const secondTimer
-  
+  const testObj = useMemo(() => {
+    return {
+      name: 'test',
+      func: () => console.log('callback'),
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log(testObj.name);
+  }, [testObj]);
 
   return (
     <View style={styles.container}>
       <View style={dimensionBoxStyle}>
-        <Text style={styles.textStyle}>
-          {formatTime(periodTimeMS - periodTimer.time)}
-        </Text>
+        <Display
+          style={styles.textStyle}
+          limit={testTimer.maxTime}
+          time={testTimer.time}
+          countdown={true}
+        />
       </View>
       <View style={dimensionBoxStyle}>
-        <Text style={styles.textStyle}>
-          {lineupTimer.running
-            ? formatTime(lineupTimer.time)
-            : timeoutTimer.running
-            ? formatTime(timeoutTimer.time)
-            : formatTime(jamTimeMS - jamTimer.time)}
-        </Text>
-      </View>
-      <View style={dimensionBoxStyle}>
-        <Pressable
+        <ControlButton
+          style={styles.textStyle}
+          label={!testTimer.timer.paused ? 'Pause' : 'Start'}
           onPress={
-            lineupTimer.running
-              ? callTimeout
-              : jamTimer.running
-              ? endJam
-              : endTimeout
+            !testTimer.timer.paused
+              ? () => testTimer.dispatch({ type: timerDispatch.PAUSE })
+              : () => testTimer.dispatch({ type: timerDispatch.START })
           }
-        >
-          <Text style={styles.textStyle}>{buttonLabel}</Text>
-        </Pressable>
+        />
       </View>
       <View style={dimensionBoxStyle}>
-        <Pressable onPress={resetAll}>
-          <Text style={styles.textStyle}>Reset</Text>
-        </Pressable>
+        <ControlButton
+          style={styles.textStyle}
+          label={'Reset and Stop'}
+          onPress={() => testTimer.dispatch({ type: timerDispatch.RESET })}
+        />
+      </View>
+      <View style={dimensionBoxStyle}>
+        <ControlButton
+          style={styles.textStyle}
+          label={'Reset and Run'}
+          onPress={resetAndStart}
+        />
       </View>
     </View>
   );
   */
+
+  const [periodTimer, periodDispatch] = useTimer(periodTimeMS);
+  const [secondTimer, secondDispatch] = useTimer(jamTimeMS);
+
+  const [currentState, setCurrentState] = useState(GameStateEnum.COMING_UP);
+  const [clickState, setClickState] = useState(GameStateEnum.JAM);
+  const [limitState, setLimitState] = useState(GameStateEnum.COMING_UP);
+
+  const [clockCountdown, setClockCountdown] = useState(true);
+  const [buttonLabel, setButtonLabel] = useState('Start Jam');
+
+  const resetAll = useCallback(() => {
+    periodDispatch({ type: timerDispatch.RESET });
+    secondDispatch({
+      type: timerDispatch.RESET,
+      payload: { maxTime: jamTimeMS },
+    });
+    setButtonLabel('Start Jam');
+    setClickState(GameStateEnum.JAM);
+    setLimitState(GameStateEnum.COMING_UP);
+    setClockCountdown(true);
+  }, [periodDispatch, secondDispatch]);
+
+  useEffect(() => {
+    if (periodTimer.limit) {
+      setClickState(GameStateEnum.INTERMISSION);
+      setLimitState(GameStateEnum.INTERMISSION);
+      if (currentState === GameStateEnum.LINEUP)
+        updateState(GameStateEnum.INTERMISSION);
+    }
+  }, [currentState, periodTimer.limit, updateState]);
+
+  useEffect(() => {
+    if (secondTimer.limit) updateState(limitState);
+  }, [limitState, secondTimer.limit, updateState]);
+
+  const updateState = useCallback(
+    (newState) => {
+      setCurrentState(newState);
+      switch (newState) {
+        case GameStateEnum.JAM:
+          periodDispatch({ type: timerDispatch.START });
+          secondDispatch({
+            type: timerDispatch.RESET,
+            payload: { maxTime: jamTimeMS },
+          });
+          secondDispatch({ type: timerDispatch.START });
+          setButtonLabel('End Jam');
+          setClockCountdown(true);
+          setClickState(GameStateEnum.LINEUP);
+          setLimitState(GameStateEnum.LINEUP);
+          break;
+        case GameStateEnum.LINEUP:
+          secondDispatch({
+            type: timerDispatch.RESET,
+            payload: { maxTime: lineupTimeMS },
+          });
+          secondDispatch({ type: timerDispatch.START });
+          setButtonLabel('Call Timeout');
+          setClockCountdown(false);
+          setClickState(GameStateEnum.TIMEOUT);
+          setLimitState(GameStateEnum.JAM);
+          break;
+        case GameStateEnum.TIMEOUT:
+          periodDispatch({ type: timerDispatch.PAUSE });
+          secondDispatch({
+            type: timerDispatch.RESET,
+            payload: { maxTime: 0 },
+          });
+          secondDispatch({ type: timerDispatch.START });
+          setButtonLabel('Start Jam');
+          setClockCountdown(false);
+          setClickState(GameStateEnum.JAM);
+          setLimitState(GameStateEnum.TIMEOUT);
+          break;
+        case GameStateEnum.INTERMISSION:
+          secondDispatch({
+            type: timerDispatch.RESET,
+            payload: { maxTime: jamTimeMS },
+          });
+          setClockCountdown(true);
+          setButtonLabel('Intermission');
+          setClickState(GameStateEnum.COMING_UP);
+          setLimitState(GameStateEnum.COMING_UP);
+      }
+    },
+    [periodDispatch, secondDispatch]
+  );
+
+  return (
+    <View style={styles.container}>
+      <View style={dimensionBoxStyle}>
+        <Display
+          style={styles.textStyle}
+          limit={periodTimer.timer.maxTime}
+          time={periodTimer.time}
+          countdown={true}
+        />
+      </View>
+      <View style={dimensionBoxStyle}>
+        <Display
+          style={styles.textStyle}
+          limit={secondTimer.timer.maxTime}
+          time={secondTimer.time}
+          countdown={clockCountdown}
+        />
+      </View>
+      <View style={dimensionBoxStyle}>
+        <ControlButton
+          style={styles.textStyle}
+          label={buttonLabel}
+          onPress={() => updateState(clickState)}
+        />
+      </View>
+      <View style={dimensionBoxStyle}>
+        <ControlButton
+          style={styles.textStyle}
+          label={'Reset'}
+          onPress={resetAll}
+        />
+      </View>
+    </View>
+  );
+
+  /*
   const periodTimeMS = (periodTime[0] * 60 + periodTime[1]) * 1000;
   const jamTimeMS = (jamTime[0] * 60 + jamTime[1]) * 1000;
   const lineupTimeMS = (lineupTime[0] * 60 + lineupTime[1]) * 1000;
@@ -220,6 +355,7 @@ const Timer = () => {
       </View>
     </View>
   );
+  */
 };
 
 export default Timer;

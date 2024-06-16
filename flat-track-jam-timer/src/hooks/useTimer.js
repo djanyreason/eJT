@@ -1,5 +1,97 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useReducer } from 'react';
 
+const defaultState = {
+  startTime: 0,
+  pauseTime: 0,
+  maxTime: 0,
+  paused: true,
+  limit: false,
+};
+
+const timerReducer = (state, action) => {
+  switch (action.type) {
+    case timerDispatch.START:
+      if (!state.paused || state.limit) {
+        return state;
+      } else {
+        return {
+          ...state,
+          startTime: Date.now(),
+          paused: false,
+        };
+      }
+    case timerDispatch.PAUSE:
+      return {
+        ...state,
+        paused: true,
+        pauseTime: state.pauseTime + Date.now() - state.startTime,
+        startTime: 0,
+      };
+    case timerDispatch.RESET:
+      return {
+        ...defaultState,
+        maxTime: action?.payload?.maxTime ?? state.maxTime,
+      };
+    case timerDispatch.LIMIT:
+      return {
+        ...state,
+        paused: true,
+        startTime: 0,
+        pauseTime: state.maxTime,
+        limit: true,
+      };
+    default:
+      return state;
+  }
+};
+
+export const timerDispatch = Object.freeze({
+  START: 0,
+  PAUSE: 1,
+  RESET: 2,
+  LIMIT: 3,
+});
+
+export const useTimer = (maxTime = 0) => {
+  const [timer, dispatch] = useReducer(timerReducer, {
+    ...defaultState,
+    maxTime,
+  });
+  const [time, setTime] = useState(0);
+
+  const interval = useRef(0);
+
+  useEffect(() => {
+    if (interval.current) {
+      clearInterval(interval.current);
+      interval.current = undefined;
+    }
+    if (timer.startTime > 0 && !timer.paused) {
+      interval.current = setInterval(() => {
+        const newTime = Date.now() - timer.startTime + timer.pauseTime;
+        if (timer.maxTime > 0 && newTime > timer.maxTime) {
+          setTime(timer.maxTime);
+          dispatch({ type: timerDispatch.LIMIT });
+        } else {
+          setTime(newTime);
+        }
+      }, 10);
+    } else {
+      if (timer.pauseTime === 0) setTime(0);
+      if (interval.current) {
+        clearInterval(interval.current);
+        interval.current = undefined;
+      }
+    }
+  }, [
+    timer,
+    /*timer.startTime, timer.paused, timer.maxTime, timer.pauseTime,*/ dispatch,
+  ]);
+
+  return [{ time, timer }, dispatch];
+};
+
+/*
 export const useTimer = (timeLimit = 0, limFunc = null) => {
   const [time, setTime] = useState(0);
   const [maxTime, setMaxTime] = useState(timeLimit);
@@ -12,6 +104,7 @@ export const useTimer = (timeLimit = 0, limFunc = null) => {
   const interval = useRef(0);
 
   useEffect(() => {
+    console.log(startTime, pauseTime, maxTime, paused, limit);
     if (startTime > 0 && !paused && !limit) {
       interval.current = setInterval(() => {
         const newTime = Date.now() - startTime + pauseTime;
@@ -39,17 +132,18 @@ export const useTimer = (timeLimit = 0, limFunc = null) => {
   }, [limit, limitCall]);
 
   const startTimer = useCallback(() => {
-    if (paused && (maxTime <= 0 || !limit)) {
+    if (maxTime <= 0 || !limit) {
       setPaused(false);
       setStartTime(Date.now());
     }
+    console.log('Start', time, paused, limit);
   }, [maxTime, limit, paused]);
 
   const pauseTimer = useCallback(() => {
     setPaused(true);
     setStartTime(0);
     const currTime = Date.now() - startTime + pauseTime;
-    if (!limit && maxTime > currTime) {
+    if (maxTime <= 0 || (!limit && maxTime > currTime)) {
       setPauseTime(Date.now() - startTime + pauseTime);
     } else {
       setTime(maxTime);
@@ -63,18 +157,21 @@ export const useTimer = (timeLimit = 0, limFunc = null) => {
     setStartTime(0);
     setPaused(true);
     setLimit(false);
-    if (newFunc) setLimitCall(() => newFunc);
+    if (newFunc) {
+      setLimitCall(() => newFunc);
+    }
     setPauseTime(0);
+    console.log('Reset', time, paused, limit);
   }, []);
 
   return {
     time,
     running: !paused,
-    limit: limit,
+    limit,
     startTimer,
     pauseTimer,
     setTime,
     resetTimer,
     maxTime,
   };
-};
+};*/
