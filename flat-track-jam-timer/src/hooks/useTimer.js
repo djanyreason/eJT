@@ -21,12 +21,16 @@ const timerReducer = (state, action) => {
         };
       }
     case timerDispatch.PAUSE:
-      return {
-        ...state,
-        paused: true,
-        pauseTime: state.pauseTime + Date.now() - state.startTime,
-        startTime: 0,
-      };
+      if (state.paused) {
+        return state;
+      } else {
+        return {
+          ...state,
+          paused: true,
+          pauseTime: state.pauseTime + Date.now() - state.startTime,
+          startTime: 0,
+        };
+      }
     case timerDispatch.RESET:
       return {
         ...defaultState,
