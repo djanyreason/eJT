@@ -12,7 +12,7 @@ const periodTime = [30, 0];
 const jamTime = [2, 0];
 const lineupTime = [0, 30];
 
-const msTime = (time) => 1000 * (time[0] * 60 + time[1]);
+const msTime = (time) => 100 * (time[0] * 60 + time[1]);
 
 const jamTimeMS = msTime(jamTime);
 const periodTimeMS = msTime(periodTime);
@@ -215,14 +215,6 @@ const Timer = () => {
     [periodDispatch, secondDispatch]
   );
 
-  const handlePress = useCallback(
-    (newState) => {
-      const pressTime = Date.now();
-      updateState(newState, pressTime);
-    },
-    [updateState]
-  );
-
   return (
     <View style={styles.container}>
       <View style={dimensionBoxStyle}>
@@ -245,7 +237,7 @@ const Timer = () => {
         <ControlButton
           style={styles.textStyle}
           label={buttonLabel}
-          onPress={() => handlePress(clickState)}
+          onPress={(event) => updateState(clickState, event.timeStamp)}
         />
       </View>
       <View style={dimensionBoxStyle}>
