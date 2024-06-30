@@ -6,6 +6,7 @@ const defaultState = {
   maxTime: 0,
   paused: true,
   limit: false,
+  limitTime: 0,
 };
 
 const timerReducer = (state, action) => {
@@ -16,7 +17,7 @@ const timerReducer = (state, action) => {
       } else {
         return {
           ...state,
-          startTime: Date.now(),
+          startTime: action.payload?.currTime ?? Date.now(),
           paused: false,
         };
       }
@@ -27,14 +28,17 @@ const timerReducer = (state, action) => {
         return {
           ...state,
           paused: true,
-          pauseTime: state.pauseTime + Date.now() - state.startTime,
+          pauseTime:
+            state.pauseTime +
+            (action.payload?.currTime ?? Date.now()) -
+            state.startTime,
           startTime: 0,
         };
       }
     case timerDispatch.RESET:
       return {
         ...defaultState,
-        maxTime: action?.payload?.maxTime ?? state.maxTime,
+        maxTime: action.payload?.maxTime ?? state.maxTime,
       };
     case timerDispatch.LIMIT:
       return {
@@ -43,6 +47,14 @@ const timerReducer = (state, action) => {
         startTime: 0,
         pauseTime: state.maxTime,
         limit: true,
+        limitTime: state.startTime - state.pauseTime + state.maxTime,
+      };
+    case timerDispatch.RESETANDSTART:
+      return {
+        ...defaultState,
+        startTime: action.payload?.currTime ?? Date.now(),
+        paused: false,
+        maxTime: action.payload?.maxTime ?? state.maxTime,
       };
     default:
       return state;
@@ -54,6 +66,7 @@ export const timerDispatch = Object.freeze({
   PAUSE: 1,
   RESET: 2,
   LIMIT: 3,
+  RESETANDSTART: 4,
 });
 
 export const useTimer = (maxTime = 0) => {
@@ -61,7 +74,7 @@ export const useTimer = (maxTime = 0) => {
     ...defaultState,
     maxTime,
   });
-  const [time, setTime] = useState(0);
+  /*const [time, setTime] = useState(0);
 
   const interval = useRef(0);
 
@@ -89,10 +102,10 @@ export const useTimer = (maxTime = 0) => {
     }
   }, [
     timer,
-    /*timer.startTime, timer.paused, timer.maxTime, timer.pauseTime,*/ dispatch,
-  ]);
+    /*timer.startTime, timer.paused, timer.maxTime, timer.pauseTime, dispatch,
+  ]);*/
 
-  return [{ time, timer }, dispatch];
+  return [timer, dispatch];
 };
 
 /*
