@@ -10,6 +10,7 @@
     "lint": "eslint ./src/**/*.{js,jsx} App.js --no-error-on-unmatched-pattern"
   },
   "dependencies": {
+    "@expo-google-fonts/share-tech-mono": "^0.2.3",
     "@expo/webpack-config": "~19.0.1",
     "eslint-plugin-react-refresh": "^0.4.5",
     "expo": "~50.0.2",

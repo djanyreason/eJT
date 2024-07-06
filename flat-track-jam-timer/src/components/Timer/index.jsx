@@ -1,5 +1,10 @@
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { View, StyleSheet, useWindowDimensions, Text } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+import {
+  ShareTechMono_400Regular,
+  useFonts,
+} from '@expo-google-fonts/share-tech-mono';
 
 import Display from './Display';
 import ControlButton from './ControlButton';
@@ -23,7 +28,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.mainBackground,
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     padding: theme.layout.appPadding,
     paddingTop: 0,
     flexGrow: 1,
@@ -39,7 +44,8 @@ const styles = StyleSheet.create({
   },
   textStyle: {
     color: theme.colors.defaultFont,
-    fontSize: 48,
+    fontSize: 72,
+    fontFamily: 'ShareTechMono_400Regular',
   },
 });
 
@@ -214,6 +220,9 @@ const Timer = () => {
     },
     [periodDispatch, secondDispatch]
   );
+
+  const [fontsLoaded] = useFonts({ ShareTechMono_400Regular });
+  if (!fontsLoaded) return <Text>Loading...</Text>;
 
   return (
     <View style={styles.container}>
