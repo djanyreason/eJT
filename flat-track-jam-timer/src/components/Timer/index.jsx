@@ -1,5 +1,5 @@
 import { View, StyleSheet, useWindowDimensions, Text } from 'react-native';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useContext } from 'react';
 
 import {
   ShareTechMono_400Regular,
@@ -10,18 +10,9 @@ import Display from './Display';
 import ControlButton from './ControlButton';
 
 import theme from '../../theme';
+import ConfigContext from '../../contexts/ConfigContext';
 
 import { timerDispatch, useTimer } from '../../hooks/useTimer';
-
-const periodTime = [30, 0];
-const jamTime = [2, 0];
-const lineupTime = [0, 30];
-
-const msTime = (time) => 100 * (time[0] * 60 + time[1]);
-
-const jamTimeMS = msTime(jamTime);
-const periodTimeMS = msTime(periodTime);
-const lineupTimeMS = msTime(lineupTime);
 
 const styles = StyleSheet.create({
   container: {
@@ -58,6 +49,7 @@ const GameStateEnum = Object.freeze({
 });
 
 const Timer = () => {
+  const [config, dispatch] = useContext(ConfigContext);
   const { height, width } = useWindowDimensions();
   const modHeight =
     height - 6 * theme.layout.appPadding - theme.layout.appPadding;
@@ -71,9 +63,9 @@ const Timer = () => {
     width: limiter === 'width' ? modWidth : (modHeight * 4.5) / 2,
   };
 
-  const [periodTimer, periodDispatch] = useTimer(periodTimeMS);
+  const [periodTimer, periodDispatch] = useTimer(config.periodTime);
   const [periodTime, setPeriodTime] = useState(0);
-  const [secondTimer, secondDispatch] = useTimer(jamTimeMS);
+  const [secondTimer, secondDispatch] = useTimer(config.jamTime);
   const [secondTime, setSecondTime] = useState(0);
 
   const [currentState, setCurrentState] = useState(GameStateEnum.COMING_UP);
@@ -87,7 +79,7 @@ const Timer = () => {
     periodDispatch({ type: timerDispatch.RESET });
     secondDispatch({
       type: timerDispatch.RESET,
-      payload: { maxTime: jamTimeMS },
+      payload: { maxTime: config.jamTime },
     });
     setButtonLabel('Start Jam');
     setClickState(GameStateEnum.JAM);
@@ -96,7 +88,7 @@ const Timer = () => {
     setPeriodTime(0);
     setSecondTime(0);
     setCurrentState(GameStateEnum.COMING_UP);
-  }, [periodDispatch, secondDispatch]);
+  }, [periodDispatch, secondDispatch, config.jamTime]);
 
   const interval = useRef(0);
 
@@ -179,7 +171,7 @@ const Timer = () => {
           periodDispatch({ type: timerDispatch.START, payload: { currTime } });
           secondDispatch({
             type: timerDispatch.RESETANDSTART,
-            payload: { maxTime: jamTimeMS, currTime },
+            payload: { maxTime: config.jamTime, currTime },
           });
           setButtonLabel('End Jam');
           setClockCountdown(true);
@@ -189,7 +181,7 @@ const Timer = () => {
         case GameStateEnum.LINEUP:
           secondDispatch({
             type: timerDispatch.RESETANDSTART,
-            payload: { maxTime: lineupTimeMS, currTime },
+            payload: { maxTime: config.lineupTime, currTime },
           });
           setButtonLabel('Call Timeout');
           setClockCountdown(false);
@@ -210,7 +202,7 @@ const Timer = () => {
         case GameStateEnum.INTERMISSION:
           secondDispatch({
             type: timerDispatch.RESET,
-            payload: { maxTime: jamTimeMS },
+            payload: { maxTime: config.jamTime },
           });
           setClockCountdown(true);
           setButtonLabel('Intermission');
@@ -218,7 +210,7 @@ const Timer = () => {
           setLimitState(GameStateEnum.COMING_UP);
       }
     },
-    [periodDispatch, secondDispatch]
+    [config.jamTime, config.lineupTime, periodDispatch, secondDispatch]
   );
 
   const [fontsLoaded] = useFonts({ ShareTechMono_400Regular });
