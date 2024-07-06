@@ -41,11 +41,12 @@ const styles = StyleSheet.create({
 });
 
 const GameStateEnum = Object.freeze({
-  COMING_UP: 0,
+  PAUSED: 0,
   JAM: 1,
   LINEUP: 2,
   TIMEOUT: 3,
   INTERMISSION: 4,
+  RESUME: 5,
 });
 
 const Timer = () => {
@@ -68,12 +69,20 @@ const Timer = () => {
   const [secondTimer, secondDispatch] = useTimer(config.jamTime);
   const [secondTime, setSecondTime] = useState(0);
 
-  const [currentState, setCurrentState] = useState(GameStateEnum.COMING_UP);
+  const [currentState, setCurrentState] = useState(GameStateEnum.PAUSED);
   const [clickState, setClickState] = useState(GameStateEnum.JAM);
-  const [limitState, setLimitState] = useState(GameStateEnum.COMING_UP);
+  const [limitState, setLimitState] = useState(GameStateEnum.PAUSED);
 
   const [clockCountdown, setClockCountdown] = useState(true);
   const [buttonLabel, setButtonLabel] = useState('Start Jam');
+
+  const [pauseState, setPauseState] = useState({
+    periodPaused: false,
+    secondPaused: false,
+    currentState: GameStateEnum.PAUSED,
+    clickState: GameStateEnum.JAM,
+    buttonLabel: 'Start Jam',
+  });
 
   const resetAll = useCallback(() => {
     periodDispatch({ type: timerDispatch.RESET });
@@ -83,12 +92,69 @@ const Timer = () => {
     });
     setButtonLabel('Start Jam');
     setClickState(GameStateEnum.JAM);
-    setLimitState(GameStateEnum.COMING_UP);
+    setLimitState(GameStateEnum.PAUSED);
     setClockCountdown(true);
     setPeriodTime(0);
     setSecondTime(0);
-    setCurrentState(GameStateEnum.COMING_UP);
+    setCurrentState(GameStateEnum.PAUSED);
+    setPauseState({
+      periodPaused: false,
+      secondPaused: false,
+      currentState: GameStateEnum.PAUSED,
+      clickState: GameStateEnum.JAM,
+      buttonLabel: 'Start Jam',
+    });
   }, [periodDispatch, secondDispatch, config.jamTime]);
+
+  const pauseAll = useCallback(
+    (event) => {
+      setPauseState({
+        periodPaused: periodTimer.paused,
+        secondPaused: secondTimer.paused,
+        currentState,
+        clickState,
+        buttonLabel,
+      });
+      const currTime = event.timeStamp;
+      if (!periodTimer.paused)
+        periodDispatch({ type: timerDispatch.PAUSE, payload: { currTime } });
+      if (!secondTimer.paused)
+        secondDispatch({ type: timerDispatch.PAUSE, payload: { currTime } });
+      setCurrentState(GameStateEnum.PAUSED);
+      setClickState(GameStateEnum.RESUME);
+      setButtonLabel('Resume');
+    },
+    [
+      buttonLabel,
+      clickState,
+      currentState,
+      periodDispatch,
+      periodTimer.paused,
+      secondDispatch,
+      secondTimer.paused,
+    ]
+  );
+
+  const resumeAll = useCallback(
+    (currTime) => {
+      if (!pauseState.periodPaused)
+        periodDispatch({ type: timerDispatch.START, payload: { currTime } });
+      if (!pauseState.secondPaused)
+        secondDispatch({ type: timerDispatch.START, payload: { currTime } });
+      setCurrentState(pauseState.currentState);
+      setClickState(pauseState.clickState);
+      setButtonLabel(pauseState.buttonLabel);
+    },
+    [
+      pauseState.buttonLabel,
+      pauseState.clickState,
+      pauseState.currentState,
+      pauseState.periodPaused,
+      pauseState.secondPaused,
+      periodDispatch,
+      secondDispatch,
+    ]
+  );
 
   const interval = useRef(0);
 
@@ -206,11 +272,20 @@ const Timer = () => {
           });
           setClockCountdown(true);
           setButtonLabel('Intermission');
-          setClickState(GameStateEnum.COMING_UP);
-          setLimitState(GameStateEnum.COMING_UP);
+          setClickState(GameStateEnum.PAUSED);
+          setLimitState(GameStateEnum.PAUSED);
+          break;
       }
     },
     [config.jamTime, config.lineupTime, periodDispatch, secondDispatch]
+  );
+
+  const controlButtonPress = useCallback(
+    (event) => {
+      if (clickState === GameStateEnum.RESUME) resumeAll(event.timeStamp);
+      else updateState(clickState, event.timeStamp);
+    },
+    [clickState, resumeAll, updateState]
   );
 
   const [fontsLoaded] = useFonts({ ShareTechMono_400Regular });
@@ -238,14 +313,14 @@ const Timer = () => {
         <ControlButton
           style={styles.textStyle}
           label={buttonLabel}
-          onPress={(event) => updateState(clickState, event.timeStamp)}
+          onPress={controlButtonPress}
         />
       </View>
       <View style={dimensionBoxStyle}>
         <ControlButton
           style={styles.textStyle}
-          label={'Reset'}
-          onPress={resetAll}
+          label={currentState === GameStateEnum.PAUSED ? 'Reset' : 'Pause'}
+          onPress={currentState === GameStateEnum.PAUSED ? resetAll : pauseAll}
         />
       </View>
     </View>
