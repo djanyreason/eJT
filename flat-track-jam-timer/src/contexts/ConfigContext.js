@@ -1,6 +1,6 @@
 import { createContext, useReducer } from 'react';
 
-const msTime = ([minutes, seconds]) => 1000 * (minutes * 60 + seconds);
+import { msTime } from '../util';
 
 const defaultState = {
   periodTime: msTime([30, 0]),

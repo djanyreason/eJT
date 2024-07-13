@@ -1,4 +1,6 @@
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+
+import NavButton from './NavButton';
 
 import theme from '../../theme';
 
@@ -7,20 +9,18 @@ const styles = StyleSheet.create({
     height: theme.layout.topBarHeight,
     backgroundColor: theme.colors.headerBackground,
     display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    padding: theme.layout.appPadding,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    //    padding: theme.layout.appPadding,
   },
-  textStyle: {
-    color: theme.colors.defaultFont,
-  },
-  // ...
 });
 
 const ControlBar = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.textStyle}>Flat Track Jam Timer Application Hi</Text>
+      <NavButton content={'Jam Timer'} route={'/'} />
+      <NavButton content={'Configuration'} route={'/config'} />
     </View>
   );
 };

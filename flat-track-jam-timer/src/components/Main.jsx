@@ -1,9 +1,11 @@
 import Constants from 'expo-constants';
 import { StyleSheet, View } from 'react-native';
+import { Route, Routes, Navigate } from 'react-router-native';
 
 import theme from '../theme';
 import ControlBar from './ControlBar';
 import Timer from './Timer';
+import Config from './Config';
 
 const styles = StyleSheet.create({
   container: {
@@ -18,7 +20,11 @@ const Main = () => {
   return (
     <View style={styles.container}>
       <ControlBar />
-      <Timer />
+      <Routes>
+        <Route path='/config' element={<Config />} />
+        <Route path='/' element={<Timer />} />
+        <Route path='*' element={<Navigate to='/' replace />} />
+      </Routes>
     </View>
   );
 };

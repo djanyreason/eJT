@@ -6,6 +6,7 @@ const theme = {
     mainBackground: '#3f3f3f',
     headerBackground: '#0f0f0f',
     defaultFont: '#f0f0f0',
+    configButtonBackground: '#8b4513',
   },
   fontSizes: {},
   fonts: {
