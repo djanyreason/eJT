@@ -8,16 +8,43 @@ const styles = StyleSheet.create({
   boxStyle: {
     marginTop: theme.layout.appPadding,
     backgroundColor: theme.colors.headerBackground,
-    /*    display: 'flex',
+    display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    flexGrow: 0,
-    flexShrink: 0,*/
   },
-  textStyle: {
+  flexRowContainerStyle: {
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  clockStyle: {
     color: theme.colors.defaultFont,
-    //    fontSize: 72,
-    //    fontFamily: 'ShareTechMono_400Regular',
+    fontFamily: theme.fonts.digits,
+    fontSize: 48,
+  },
+  clockInputStyle: {
+    color: theme.colors.headerBackground,
+    backgroundColor: theme.colors.defaultFont,
+    fontFamily: theme.fonts.digits,
+    fontSize: 48,
+    padding: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTextStyle: {
+    color: theme.colors.defaultFont,
+    fontFamily: theme.fonts.main,
+    fontSize: 32,
+  },
+  buttonTextStyle: {
+    color: theme.colors.defaultFont,
+    fontFamily: theme.fonts.main,
+    fontSize: 24,
+  },
+  buttonStyle: {
+    alignItems: 'center',
+    flexGrow: 1,
+    margin: theme.layout.appPadding,
+    marginTop: 0,
   },
 });
 
@@ -36,7 +63,7 @@ const ConfigEntry = ({ title, time, submit }) => {
   };
 
   const handleChange = (text, stateFunc) => {
-    stateFunc(text); /*text.replace(/[^0-9]/g, ''));*/
+    stateFunc(text.replace(/[^0-9]/g, ''));
   };
 
   const handlePress = (pressFunc) => {
@@ -47,36 +74,54 @@ const ConfigEntry = ({ title, time, submit }) => {
 
   return (
     <View style={styles.boxStyle}>
-      <Text style={styles.textStyle}>{title}</Text>
-      <TextInput
-        ref={minRef}
-        style={styles.textStyle}
-        value={min}
-        onChangeText={(text) => handleChange(text, setMin)}
-        keyboardType='number-pad'
-        maxLength={2}
-        onBlur={() => {
-          if (min.length < 2) setMin(formatDigits(min));
-        }}
-      />
-      <Text style={styles.textStyle}>:</Text>
-      <TextInput
-        ref={secRef}
-        style={styles.textStyle}
-        value={sec}
-        onChangeText={(text) => handleChange(text, setSec)}
-        keyboardType='number-pad'
-        maxLength={2}
-        onBlur={() => {
-          if (sec.length < 2) setSec(formatDigits(sec));
-        }}
-      />
-      <Pressable onPress={() => handlePress(() => submit(min, sec))}>
-        <Text style={styles.textStyle}>Update</Text>
-      </Pressable>
-      <Pressable onPress={() => handlePress(resetForm)}>
-        <Text style={styles.textStyle}>Reset</Text>
-      </Pressable>
+      <View style={styles.flexRowContainerStyle}>
+        <Text style={styles.headerTextStyle}>{title}</Text>
+      </View>
+      <View style={styles.flexRowContainerStyle}>
+        <TextInput
+          ref={minRef}
+          style={styles.clockInputStyle}
+          value={min}
+          onChangeText={(text) => handleChange(text, setMin)}
+          keyboardType='number-pad'
+          maxLength={2}
+          onBlur={() => {
+            if (min.length < 2) setMin(formatDigits(min));
+          }}
+        />
+        <Text style={styles.clockStyle}>:</Text>
+        <TextInput
+          ref={secRef}
+          style={styles.clockInputStyle}
+          value={sec}
+          onChangeText={(text) => handleChange(text, setSec)}
+          keyboardType='number-pad'
+          maxLength={2}
+          onBlur={() => {
+            if (sec.length < 2) setSec(formatDigits(sec));
+          }}
+        />
+      </View>
+      <View style={styles.flexRowContainerStyle}>
+        <Pressable
+          style={{
+            backgroundColor: theme.colors.submitButtonBackground,
+            ...styles.buttonStyle,
+          }}
+          onPress={() => handlePress(() => submit(min, sec))}
+        >
+          <Text style={styles.buttonTextStyle}>Update</Text>
+        </Pressable>
+        <Pressable
+          style={{
+            backgroundColor: theme.colors.resetButtonBackground,
+            ...styles.buttonStyle,
+          }}
+          onPress={() => handlePress(resetForm)}
+        >
+          <Text style={styles.buttonTextStyle}>Reset</Text>
+        </Pressable>
+      </View>
     </View>
   );
 };

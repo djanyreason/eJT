@@ -7,6 +7,8 @@ const theme = {
     headerBackground: '#0f0f0f',
     defaultFont: '#f0f0f0',
     configButtonBackground: '#8b4513',
+    submitButtonBackground: '#1b5e20',
+    resetButtonBackground: '#c62828',
   },
   fontSizes: {},
   fonts: {
@@ -15,6 +17,7 @@ const theme = {
       iOS: 'Arial',
       default: 'System',
     }),
+    digits: 'ShareTechMono_400Regular',
   },
   fontWeights: {
     normal: '400',

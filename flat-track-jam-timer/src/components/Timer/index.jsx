@@ -1,11 +1,6 @@
 import { View, StyleSheet, useWindowDimensions, Text } from 'react-native';
 import { useState, useEffect, useRef, useCallback, useContext } from 'react';
 
-import {
-  ShareTechMono_400Regular,
-  useFonts,
-} from '@expo-google-fonts/share-tech-mono';
-
 import Display from './Display';
 import ControlButton from './ControlButton';
 
@@ -33,10 +28,15 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 0,
   },
-  textStyle: {
+  clockStyle: {
     color: theme.colors.defaultFont,
     fontSize: 72,
-    fontFamily: 'ShareTechMono_400Regular',
+    fontFamily: theme.fonts.digits,
+  },
+  textStyle: {
+    color: theme.colors.defaultFont,
+    fontSize: 60,
+    fontFamily: theme.fonts.main,
   },
 });
 
@@ -288,14 +288,11 @@ const Timer = () => {
     [clickState, resumeAll, updateState]
   );
 
-  const [fontsLoaded] = useFonts({ ShareTechMono_400Regular });
-  if (!fontsLoaded) return <Text>Loading...</Text>;
-
   return (
     <View style={styles.container}>
       <View style={dimensionBoxStyle}>
         <Display
-          style={styles.textStyle}
+          style={styles.clockStyle}
           limit={periodTimer.maxTime}
           time={periodTime}
           countdown={true}
@@ -303,7 +300,7 @@ const Timer = () => {
       </View>
       <View style={dimensionBoxStyle}>
         <Display
-          style={styles.textStyle}
+          style={styles.clockStyle}
           limit={secondTimer.maxTime}
           time={secondTime}
           countdown={clockCountdown}
