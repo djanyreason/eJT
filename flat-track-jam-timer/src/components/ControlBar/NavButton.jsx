@@ -1,5 +1,5 @@
 import { StyleSheet, Text, Pressable } from 'react-native';
-import { Link } from 'react-router-native';
+import { useNavigate } from 'react-router-native';
 
 import theme from '../../theme';
 
@@ -23,6 +23,10 @@ const styles = StyleSheet.create({
 });
 
 const NavButton = ({ content, route }) => {
+  const navigate = useNavigate();
+
+  const handlePress = () => navigate(route);
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -33,21 +37,20 @@ const NavButton = ({ content, route }) => {
             : theme.colors.configButtonBackground,
         },
       ]}
+      onPress={handlePress}
     >
       {({ pressed }) => (
-        <Link to={route}>
-          <Text
-            style={[
-              {
-                color: pressed
-                  ? theme.colors.configButtonBackground
-                  : theme.colors.defaultFont,
-              },
-            ]}
-          >
-            {content}
-          </Text>
-        </Link>
+        <Text
+          style={[
+            {
+              color: pressed
+                ? theme.colors.configButtonBackground
+                : theme.colors.defaultFont,
+            },
+          ]}
+        >
+          {content}
+        </Text>
       )}
     </Pressable>
   );

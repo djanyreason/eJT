@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
     padding: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    width: 52,
   },
   headerTextStyle: {
     color: theme.colors.defaultFont,
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
   buttonTextStyle: {
     color: theme.colors.defaultFont,
     fontFamily: theme.fonts.main,
-    fontSize: 24,
+    fontSize: 18,
   },
   buttonStyle: {
     alignItems: 'center',
