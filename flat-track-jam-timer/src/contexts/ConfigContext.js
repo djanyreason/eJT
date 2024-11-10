@@ -16,7 +16,7 @@ const configReducer = (state, action) => {
     case 'JAM':
       return { ...state, jamTime: msTime(action.payload.time) };
     case 'LINEUP':
-      return { ...state, jamTime: msTime(action.payload.time) };
+      return { ...state, lineupTime: msTime(action.payload.time) };
     default:
       return state;
   }
