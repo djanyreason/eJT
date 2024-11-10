@@ -2,9 +2,19 @@ import { Text } from 'react-native';
 
 import { formatTime } from '../../util';
 
-const Display = ({ style, countdown, limit, time }) => {
+import theme from '../../theme';
+
+const Display = ({ style, countdown, limit, time, alert }) => {
   return (
-    <Text style={style}>{formatTime(countdown ? limit - time : time)}</Text>
+    <Text
+      style={
+        alert && time % 1000 <= 500
+          ? [style, { backgroundColor: theme.colors.alert }]
+          : style
+      }
+    >
+      {formatTime(countdown ? limit - time : time)}
+    </Text>
   );
 };
 

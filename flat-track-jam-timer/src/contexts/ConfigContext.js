@@ -6,6 +6,7 @@ const defaultState = {
   periodTime: msTime([30, 0]),
   jamTime: msTime([2, 0]),
   lineupTime: msTime([0, 30]),
+  alertSeconds: 5,
 };
 
 const configReducer = (state, action) => {

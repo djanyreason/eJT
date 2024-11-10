@@ -9,6 +9,7 @@ const theme = {
     configButtonBackground: '#8b4513',
     submitButtonBackground: '#1b5e20',
     resetButtonBackground: '#c62828',
+    alert: '#ff0000',
   },
   fontSizes: {},
   fonts: {

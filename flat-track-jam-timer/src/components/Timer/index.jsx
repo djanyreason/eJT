@@ -76,6 +76,8 @@ const Timer = () => {
   const [clockCountdown, setClockCountdown] = useState(true);
   const [buttonLabel, setButtonLabel] = useState('Start Jam');
 
+  const [alert, setAlert] = useState(false);
+
   const [pauseState, setPauseState] = useState({
     periodPaused: false,
     secondPaused: false,
@@ -104,6 +106,7 @@ const Timer = () => {
       clickState: GameStateEnum.JAM,
       buttonLabel: 'Start Jam',
     });
+    setAlert(false);
   }, [periodDispatch, secondDispatch, config.jamTime]);
 
   const pauseAll = useCallback(
@@ -189,6 +192,10 @@ const Timer = () => {
             secondDispatch({ type: timerDispatch.LIMIT });
           } else {
             setSecondTime(newST);
+            setAlert(
+              secondTimer.maxTime > 0 &&
+                newST > secondTimer.maxTime - config.alertSeconds * 1000
+            );
           }
         } else {
           if (secondTimer.pauseTime === 0) setSecondTime(0);
@@ -213,6 +220,7 @@ const Timer = () => {
     secondTimer.pauseTime,
     secondTimer.paused,
     secondTimer.startTime,
+    config.alertSeconds,
   ]);
 
   useEffect(() => {
@@ -232,6 +240,7 @@ const Timer = () => {
   const updateState = useCallback(
     (newState, currTime) => {
       setCurrentState(newState);
+      setAlert(false);
       switch (newState) {
         case GameStateEnum.JAM:
           periodDispatch({ type: timerDispatch.START, payload: { currTime } });
@@ -296,6 +305,7 @@ const Timer = () => {
           limit={periodTimer.maxTime}
           time={periodTime}
           countdown={true}
+          alert={false}
         />
       </View>
       <View style={dimensionBoxStyle}>
@@ -304,6 +314,7 @@ const Timer = () => {
           limit={secondTimer.maxTime}
           time={secondTime}
           countdown={clockCountdown}
+          alert={alert}
         />
       </View>
       <View style={dimensionBoxStyle}>
